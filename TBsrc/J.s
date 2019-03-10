@@ -1,0 +1,13 @@
+addiu $t1,$t1,1
+j bottom
+addiu  $t1,$t1,1
+addiu  $t1,$t1,1
+addiu  $t1,$t1,1
+top:addiu  $t1,$t1,1
+addiu  $t1,$t1,1
+add  $2,$0,$t1
+jr   $0
+bottom:addiu  $t1,$t1,1
+addiu  $t1,$t1,1
+addiu  $t1,$t1,1
+j top

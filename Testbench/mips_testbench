@@ -1,0 +1,57 @@
+#!/bin/bash
+mkdir -p ./test/output/
+mkdir -p ./test/temp/
+addr=$1
+binfile='.bin'
+dir='./Testbench/'
+
+
+for file in $(ls $dir | find ./Testbench -name '*.c')
+    do
+    name=$(ls $file | cut -d. -f2)
+    make '.'$name$binfile
+    done
+#echo "c done!"
+
+for file in $(ls $dir | find ./Testbench -name '*.s')
+    do
+    name=$(ls $file | cut -d. -f2)
+    make '.'$name$binfile
+    done
+#echo "s done!"
+
+
+for file in $(ls $dir | grep .$binfile)
+    do
+    name=$(echo $file | cut -d. -f1)
+    insname=$(echo $name | tr -d [1-9])
+    if test -e ./Testbench/$name'#stdin'.txt
+      then
+        timeout 2s <./Testbench/$name'#stdin'.txt >./test/temp/out.txt $addr ./Testbench/$name.bin
+        re=$?
+      else
+        >./test/temp/out.txt $addr ./Testbench/$name.bin
+        re=$?
+    fi
+
+    recompare=$(cat ./Testbench/"$name#return".txt)
+    if [[ $re != $recompare ]];
+    then
+      echo "$name , $insname, Fail, liqinyang, wrong return code $re"
+    else
+        if test -e ./Testbench/$name'#stdout'.txt
+        then
+          stdcompare=$(cat ./Testbench/"$name#stdout".txt)
+          var=$(hexdump -v -e '/1 "%02x"' ./test/temp/out.txt)
+          if [[ $var = $stdcompare ]];
+          then
+            echo "$name , $insname, Pass, liqinyang"
+          else
+            echo "$name , $insname, Fail, liqinyang, $var is outputted instead of $stdcompare" 
+          fi
+        else
+          echo "$name , $insname, Pass, liqinyang"
+        fi
+    fi
+    done
+#echo "done!"
